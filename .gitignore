@@ -1,0 +1,17 @@
+#
+# ignoring generated files
+#
+*~
+\#*
+.\#*
+*_?ats.o
+*_?ats.c
+*.exe
+
+######
+
+bin/
+
+######
+
+###### end of [.gitignore] ######
