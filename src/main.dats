@@ -25,6 +25,14 @@ staload
 
 (* ****** ****** *)
 
+#staload "./sdom.sats"
+local
+#include "./sdom.dats"
+in
+end
+
+(* ****** ****** *)
+
 #staload "./tree.sats"
 
 local
@@ -356,11 +364,70 @@ hello() = let
   // NEXT: navigation/subtree type
 in
 end
+(* ****** ****** *)
+//
+
+(* ****** ****** *)
+//
+extern
+fun
+hello_sdom(): void = "mac#"
+implement
+hello_sdom() = let
+(*
+will still need some "handles" for sub-DOM-trees of a given tree.
+
+and we'll probably require some form of "dom node sharing" to save those things
+also, we will be using "lifecycle" events for tree nodes:
+- tree node added --> dom node needs to be constructed following the template
+(ACTUALLY... let's just do it ourselves! for every subtree in the [template] result,
+produce its dom, then construct the dom node, link them up, perform UPDATE)
+- tree node updated --> dom node needs to be updated
+- tree node deleted --> nah, automatically deletes the corresponding dom node
+
+e.g. If[hole,hole,hole]
+and then we have:
+- pointer to DOM node representing the whole expression
+- for every child, pointer to DOM node representing the child
+*)
+  val d = element("div")
+ 
+  val caret = element("span")
+  val () = caret["style"] := "border:1px solid"
+  val () = caret["id"] := "MY-caret"
+  val () = d.append(caret)
+
+  val () = d.add_listener ("click", lam (d, e) => {
+    val () = alert("hello!")
+    val () = d["style"] := "font-weight:bold"
+  }, false)
+
+  val () = d["class"] := "foobar"
+  val () = d.append(text("Hello!"))
+  val () = d.append(text(" "))
+  val s = element("span")
+  val () = s.append(text("there"))
+  val () = d.append(s)
+  
+  val inp = element("input")
+  val () = inp["type"] := "checkbox"
+  val () = inp["id"] := "my-checkbox"
+  val () = inp.add_listener("click", lam (inp, evt) => evt.prevent_default(), false)
+  val inp_para = element("p")
+  val () = let val txt = text("Please check the box") in inp_para.append(txt) end
+  val () = d.append(inp_para)
+  val () = d.append(inp)
+  
+  val () = dom_insert_at ("sdom-test", d)
+in
+
+end
 
 //
 (* ****** ****** *)
 //
 val () = hello()
+val () = hello_sdom()
 //
 (* ****** ****** *)
 
