@@ -51,3 +51,71 @@ overload .append with dom_append_child
 
 fun
 dom_insert_at (string(*id of element*), dom): void = "mac#"
+
+(* ****** ****** *)
+
+local
+
+macrodef
+rec
+auxlist
+  (a, xs, y) =
+(
+//
+if iscons! (xs) then
+  `(let val tmp = ,(car! xs) in dom_append_child (,(a), tmp); ,(auxlist (a, cdr! xs, y)) end)
+else y // end of [if]
+//
+) // end of [auxlist]
+
+macrodef
+rec
+auxlist2
+  (a, xs, y) =
+(
+//
+if iscons! (xs) then
+  `(let
+      val tmp0 = ,(car! xs)
+      val tmp1 = ,(car! (cdr! xs))
+    in
+      dom_set_attribute (,(a), tmp0, tmp1);
+      ,(auxlist2 (a, cdr! (cdr! xs), y))
+    end)
+else y // end of [if]
+//
+) // end of [auxlist2]
+
+in (* in of [local] *)
+
+macdef
+append_mac(x, y) =
+,(
+  if islist! (y) then `(let
+    val tmp = ,(x)
+  in
+    ,(auxlist (`(tmp), y, `(tmp)))
+  end) else `(let
+    val tmp = ,(x)
+    val chld = ,(y)
+  in
+    dom_append_child (tmp, chld);
+    tmp
+  end)
+) // end of [print_mac]
+
+macdef
+attrib_mac(x, y) =
+,(
+  if islist! (y) then `(let
+    val tmp = ,(x)
+  in
+    ,(auxlist2 (`(tmp), y, `(tmp)))
+  end) else `(let
+    val tmp = ,(x)
+  in
+    tmp
+  end)
+)
+
+end // end of [local]

@@ -390,34 +390,23 @@ and then we have:
 - pointer to DOM node representing the whole expression
 - for every child, pointer to DOM node representing the child
 *)
-  val d = element("div")
+  val d = append_mac(element("div"), attrib_mac(element("span"), "style", "border:1px solid", "id", "MY-caret"))
  
-  val caret = element("span")
-  val () = caret["style"] := "border:1px solid"
-  val () = caret["id"] := "MY-caret"
-  val () = d.append(caret)
-
   val () = d.add_listener ("click", lam (d, e) => {
     val () = alert("hello!")
     val () = d["style"] := "font-weight:bold"
   }, false)
 
   val () = d["class"] := "foobar"
-  val () = d.append(text("Hello!"))
-  val () = d.append(text(" "))
-  val s = element("span")
-  val () = s.append(text("there"))
-  val () = d.append(s)
+  val d = append_mac (d, text("Hello!"), text(" "), append_mac(element("span"), text("there")), text("!"))
   
-  val inp = element("input")
-  val () = inp["type"] := "checkbox"
-  val () = inp["id"] := "my-checkbox"
-  val () = inp.add_listener("click", lam (inp, evt) => evt.prevent_default(), false)
-  val inp_para = element("p")
-  val () = let val txt = text("Please check the box") in inp_para.append(txt) end
-  val () = d.append(inp_para)
-  val () = d.append(inp)
-  
+  val d = append_mac (d, append_mac (element("p"), text("Please check the box")), let
+      val inp = attrib_mac (element("input"), "type", "checkbox", "id", "my-checkbox")
+      val () = inp.add_listener("click", lam (inp, evt) => evt.prevent_default(), false)
+    in
+      inp
+    end)
+
   val () = dom_insert_at ("sdom-test", d)
 in
 
