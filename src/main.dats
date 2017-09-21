@@ -392,9 +392,12 @@ and then we have:
 *)
   val d = append_mac(element("div"), attrib_mac(element("span"), "style", "border:1px solid", "id", "MY-caret"))
  
-  val () = d.add_listener ("click", lam (d, e) => {
-    val () = alert("hello!")
-    val () = d["style"] := "font-weight:bold"
+  val xclo = "hey"
+  val () = d.add_listener ("click", lam (d, e) =<cloref1> {
+    val () = alert("caret clicked! and we also have: " + xclo)
+    val style = d["style"]
+    val b0 = "font-weight:bold"
+    val () = d["style"] := (if style=b0 then "" else "font-weight:bold")
   }, false)
 
   val () = d["class"] := "foobar"
@@ -402,12 +405,15 @@ and then we have:
   
   val d = append_mac (d, append_mac (element("p"), text("Please check the box")), let
       val inp = attrib_mac (element("input"), "type", "checkbox", "id", "my-checkbox")
-      val () = inp.add_listener("click", lam (inp, evt) => evt.prevent_default(), false)
+      val () = inp.add_listener("click", lam (inp, evt) =<cloref1> evt.prevent_default(), false)
     in
       inp
     end)
 
-  val () = dom_insert_at ("sdom-test", d)
+  val (pf | p) = dom_get_by_id (string2id("sdom-test"))
+  val-true = dom_is_some (p)
+  val () = dom_append_child (p, d)
+  val () = dom_putback (pf | p)
 in
 
 end
