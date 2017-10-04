@@ -49,6 +49,8 @@ eq_id_id (ID, ID): bool = "ext#ATSCKpat_string"
 overload = with eq_id_id
 castfn
 string2id (string): ID
+castfn
+id2string (ID): string
 fun
 get_next_id (): ID = "mac#"
 

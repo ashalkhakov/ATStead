@@ -45,6 +45,25 @@ in
 end
 
 (* ****** ****** *)
+
+#staload "./render.sats"
+
+local
+
+in
+
+#include "./render.dats"
+
+end
+
+(* ****** ****** *)
+
+extern
+castfn ident2ID : ident -> ID
+extern
+castfn ID2ident : ID -> ident
+
+(* ****** ****** *)
 (*
 absvtype subtree' = ptr
 (*
@@ -226,7 +245,7 @@ hello() = let
     val x = tree_fork(Lvar "a", c :: z :: b :: nil)
 
     // FIXME: how to send ATS closures to JS code?
-    val () = children_foreach (x, lam x => println!(label(x)))
+    val () = children_foreach (x, lam x =<cloref1> println!(label(x)))
     val () = preorder_foreach (x, lam x => println!(x))
    
     val () = tree_delete x
@@ -365,8 +384,8 @@ hello() = let
 in
 end
 (* ****** ****** *)
+ 
 //
-
 (* ****** ****** *)
 //
 extern
@@ -393,11 +412,13 @@ and then we have:
   val d = append_mac(element("div"), attrib_mac(element("span"), "style", "border:1px solid", "id", "MY-caret"))
  
   val xclo = "hey"
-  val () = d.add_listener ("click", lam (d, e) =<cloref1> {
+  val () = d.add_listener ("click", lam (d0 : !dom1, e : !event): void =<cloref1> {
+    val-true = dom_is_some d0
     val () = alert("caret clicked! and we also have: " + xclo)
-    val style = d["style"]
-    val b0 = "font-weight:bold"
-    val () = d["style"] := (if style=b0 then "" else "font-weight:bold")
+    val style = dom_get_attribute (d0, "style")
+    val b0 = (g0ofg1)"font-weight:bold"
+    val s = (if style = b0 then "" else "font-weight:bold")
+    val () = dom_set_attribute (d0, "style", s)
   }, false)
 
   val () = d["class"] := "foobar"
@@ -405,7 +426,7 @@ and then we have:
   
   val d = append_mac (d, append_mac (element("p"), text("Please check the box")), let
       val inp = attrib_mac (element("input"), "type", "checkbox", "id", "my-checkbox")
-      val () = inp.add_listener("click", lam (inp, evt) =<cloref1> evt.prevent_default(), false)
+      val () = inp.add_listener("click", lam (inp : !dom1, evt : !event): void =<cloref1> evt.prevent_default(), false)
     in
       inp
     end)
@@ -417,12 +438,40 @@ and then we have:
 in
 
 end
+//
+(* ****** ****** *)
+//
+extern
+fun
+hello_sdom_tree (): void = "mac#"
+implement
+hello_sdom_tree (): void = let
+  #define :: list_vt_cons
+  #define nil list_vt_nil
+  
+  extern
+  castfn
+  string2ID : string -> ID
 
+  // construct stuff!
+  val x = tree_fork(Lvar "plus", hole() :: hole() :: nil())     
+  val st = root(x)
+  val y = tree_atom(Lvar "A")
+  val st = treeinsert(y, st)
+  val st = back_to_top st
+
+  val () = render (string2ID "container", st)
+     
+  val x = host(st)
+  val () = tree_delete (x)
+in
+end
 //
 (* ****** ****** *)
 //
 val () = hello()
 val () = hello_sdom()
+val () = hello_sdom_tree()
 //
 (* ****** ****** *)
 

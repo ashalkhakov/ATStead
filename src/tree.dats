@@ -105,9 +105,20 @@ producable (op2, op1) =
 
 %{$
 //
+var the_tree_ident = 0;
+function
+the_tree_ident_getnext () {
+  the_tree_ident--;
+  return "tid-" + the_tree_ident;
+}
+var the_tree_allocs = {};
+//
 function
 tree_atom(x) {
-  return { prev: null, next: null, value: x, parent: null, child : null }
+  var i = the_tree_ident_getnext();
+  var res = { prev: null, next: null, value: x, parent: null, child : null, ident: i };
+  the_tree_allocs[i] = res;
+  return res;
 }
 function
 tree_insert_before(x, y) {
@@ -157,6 +168,7 @@ function
 tree_delete(x) {
   // NOTE: we only allow deleting the whole tree
   // so that means we don't have to do anything here
+  delete the_tree_allocs[x.ident];
 }
 
 function
@@ -185,6 +197,10 @@ tree_label(x) {
   return x.value;
 }
 function
+tree_ident(x) {
+  return x.ident;
+}
+function
 tree_atomic(x) {
   return x.child === null;
 }
@@ -197,7 +213,7 @@ function
 tree_children_foreach(x, f) {
   var c = x.child;
   while (c !== null) {
-    f(c);
+    f[0](f, c); // clofun
     c = c.next;
   }
 }

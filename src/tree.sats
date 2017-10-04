@@ -17,6 +17,10 @@ overload = with eq_label_label
 
 (* ****** ****** *)
 
+abstype ident = ptr
+
+(* ****** ****** *)
+
 absvtype tree = ptr
 fun
 tree_atom (label): tree = "mac#"
@@ -26,23 +30,25 @@ fun
 tree_is_fork (tree): bool = "mac#"
 //
 fun
-print_tree (tree): void = "mac#"
+print_tree (!tree): void = "mac#"
 overload print with print_tree of 100
 
 fun
-eq_tree_tree (tree, tree): bool = "mac#"
+eq_tree_tree (!tree, !tree): bool = "mac#"
 overload = with eq_tree_tree
 
 fun
 hole : () -> tree = "mac#tree_hole"
 fun
 label : (!tree) -> label = "mac#tree_label"
+fun
+ident : (!tree) -> ident = "mac#tree_ident"
 
 fun
 template : label -> tree = "mac#"
 
 fun
-children_foreach : (!tree, (!tree) -> void) -> void = "mac#tree_children_foreach"
+children_foreach : (!tree, (!tree) -<cloref1> void) -> void = "mac#tree_children_foreach"
 fun
 preorder_foreach : (!tree, label -> void) -> void = "mac#tree_preorder_foreach"
 fun
@@ -60,6 +66,10 @@ fun
 embed : (tree, layer) -> tree = "mac#" // TODO: implement
 fun
 selected_label : (!subtree) -> label = "mac#tree_label"
+fun
+selected_children_foreach : (!subtree, (!subtree) -<cloref1> void) -> void = "mac#tree_children_foreach"
+fun
+selected_ident : (!subtree) -> ident = "mac#tree_ident"
 (*
 fun
 selected : (!subtree) -> ((tree) -<prf> void | tree) = "mac#" // not checked if we need it?
