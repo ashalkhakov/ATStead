@@ -18,6 +18,9 @@ overload = with eq_label_label
 (* ****** ****** *)
 
 abstype ident = ptr
+fun
+eq_ident_ident (ident, ident): bool = "ext#eq_ident_ident"
+overload = with eq_ident_ident
 
 (* ****** ****** *)
 
@@ -66,6 +69,8 @@ fun
 embed : (tree, layer) -> tree = "mac#" // TODO: implement
 fun
 selected_label : (!subtree) -> label = "mac#tree_label"
+fun
+subtree_foreach : (!subtree, (!subtree, ident) -<cloref1> void) -> void = "mac#subtree_foreach"
 fun
 selected_children_foreach : (!subtree, (!subtree) -<cloref1> void) -> void = "mac#tree_children_foreach"
 fun
@@ -129,11 +134,11 @@ bottommost : (!subtree) -> bool = "mac#subtree_bottommost"
 (* ****** ****** *)
 
 val
-at_hole : (!subtree) -> bool = "mac#" // if label="hole", ATS side
+at_hole : (!subtree) -> bool = "mac#subtree_at_hole" // if label="hole", ATS side
 val
-rightup : subtree -> subtree = "mac#"
+rightup : subtree -> subtree = "mac#subtree_rightup"
 val
-next : subtree -> subtree = "mac#" //
+next : subtree -> subtree = "mac#subtree_next"
 (*
 val
 preorder : (!tree) -> List(tree) = "mac#"

@@ -5,7 +5,7 @@ fun
 update (ID, !dom1, label): void = "mac#"
 
 fun
-create (ID, label): dom1 = "mac#"
+create (ID, label, bool(*focussed*)): dom1 = "mac#"
 
 fun
-render (ID, node : !subtree): void = "mac#"
+render (put_into : ID, node : !subtree): void = "mac#"

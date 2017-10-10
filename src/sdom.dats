@@ -86,5 +86,12 @@ dom_insert_at (id, p) {
   var elt = document.getElementById(id);
   elt.appendChild(p);
 }
+function
+dom_clear_at (id) {
+  var elt = document.getElementById(id);
+  while (elt.firstChild) {
+    elt.removeChild(elt.firstChild);
+  }
+}
 
 %}

@@ -78,6 +78,8 @@ overload .append with dom_append_child
 
 fun
 dom_insert_at (ID, dom1): void = "mac#"
+fun
+dom_clear_at (ID): void = "mac#"
 
 (* ****** ****** *)
 

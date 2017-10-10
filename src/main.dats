@@ -441,6 +441,60 @@ end
 //
 (* ****** ****** *)
 //
+datatype navtype =
+    | NTleft
+    | NTright
+    | NTup
+    | NTdown
+    | NTfirst
+    | NTlast
+    | NTtop
+//
+datavtype
+command =
+  | CMDentry of tree // begin with this tree
+  | CMDnav of navtype // navigate the tree
+  | CMDreplace of tree // replace focussed subtree with the new tree
+  | CMDinsert of label // insert a new label
+  | CMDenter of label // enter a new label, taking precedence into account
+  | CMDnop // no action!
+//
+extern
+fun
+present (subtree, command): subtree
+//
+implement
+present (focussed, cmd) =
+(
+case+ cmd of
+| ~CMDentry t => let
+    val ot = host focussed
+    val () = tree_delete (ot)
+    val r = root t
+  in
+    r
+  end
+| ~CMDnav nt => let
+  in
+    case+ nt of
+    | NTleft () => left focussed
+    | NTright () => right focussed
+    | NTup () => up focussed
+    | NTdown () => down focussed
+    | NTfirst () => first_child focussed
+    | NTlast () => last_child focussed
+    | NTtop () => back_to_top focussed
+  end
+| ~CMDreplace t => replace (t, focussed)
+| ~CMDinsert lab => insert (lab, focussed)
+| ~CMDenter lab =>  entry (lab, focussed)
+| ~CMDnop () => focussed
+)
+//
+extern
+fun
+input_events (subtree, (subtree, string) -> subtree): void = "mac#"
+//
 extern
 fun
 hello_sdom_tree (): void = "mac#"
@@ -451,19 +505,50 @@ hello_sdom_tree (): void = let
   
   extern
   castfn
-  string2ID : string -> ID
+  string2ID : string -> ID  
 
   // construct stuff!
   val x = tree_fork(Lvar "plus", hole() :: hole() :: nil())     
   val st = root(x)
   val y = tree_atom(Lvar "A")
   val st = treeinsert(y, st)
-  val st = back_to_top st
-
-  val () = render (string2ID "container", st)
-     
   val x = host(st)
-  val () = tree_delete (x)
+  
+  fun
+  action (s: subtree, evt: string): subtree = let
+    // turn the input event into a command for the subtree
+    val cmd = (
+      ifcase
+      | evt = "ArrowLeft" => CMDnav (NTleft())
+      | evt = "ArrowRight" => CMDnav (NTright())
+      | evt = "ArrowUp" => CMDnav (NTup())
+      | evt = "ArrowDown" => CMDnav (NTdown())
+      | evt = "Plus" => CMDenter (Ladd ())
+      | evt = "KeyI" => CMDenter (Lif ())
+      | evt = "KeyV" => CMDenter (Lvar "MYVAR")
+      | evt = "KeyH" => CMDreplace (hole ())
+      | evt = "Digit0" => CMDenter (Lconst 0)
+      | evt = "Digit1" => CMDenter (Lconst 1)
+      | evt = "Digit2" => CMDenter (Lconst 2)
+      | evt = "KeyL" => CMDenter (Llam ())
+      | evt = "Space" => CMDenter (Lapp ())
+      | _ => CMDnop ()
+    ) : command (* end of [val] *)
+    // and apply it
+    val s = present (s, cmd)
+    // next, re-render the state from scratch (for now)
+    extern
+    castfn
+    string2ID : string -> ID
+    val () = dom_clear_at (string2ID "container")
+    val () = render (string2ID "container", s)
+  in
+    s
+  end
+  
+  // run the stream!
+  val rt = root x
+  val () = input_events (rt, action)
 in
 end
 //
@@ -476,6 +561,15 @@ val () = hello_sdom_tree()
 (* ****** ****** *)
 
 %{$
+
+function
+input_events (state, handler) {
+  document.onkeydown = function(evt) {
+     state = handler(state, evt.code);
+  };
+  // draw it the first time
+  state = handler(state, "");
+}
 
 //----------------------
 

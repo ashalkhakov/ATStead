@@ -96,7 +96,7 @@ reduce (l, st) =
 implement
 irreducible (l, st) =
     at_hole st || topmost st || ~rightmost st ||
-        ~producable (l, label_selected (up st))
+        ~producable (l, selected_label (up st))
 *)
 
 implement
@@ -104,6 +104,9 @@ producable (op2, op1) =
   (op1 = op2 && assl op1) || prec op1 > prec op2
 
 %{$
+//
+function
+eq_ident_ident (x, y) { return x === y; }
 //
 var the_tree_ident = 0;
 function
@@ -222,6 +225,26 @@ tree_children_foreach(x, f) {
 function
 subtree_root(x) {
   return x;
+}
+function
+subtree_foreach(x, f) {
+  var xid = tree_ident(x);
+  var r = subtree_back_to_top(x);
+  
+  var node = r
+  while (true) {
+    f[0](f, node, xid);
+    if (node.child !== null) {
+       node = node.child // walk down
+    } else {
+       while (node.next === null) {
+         if (node === r)
+           return;
+         node = node.parent; // walk up
+       }
+       node = node.next; // ... and right
+    }
+  }
 }
 
 // - top/topmost(parent=null)
@@ -399,7 +422,7 @@ irreducible(l, st) {
     return subtree_at_hole(st)
     || subtree_topmost(st)
     || !subtree_rightmost(st)
-    || !producable (l, label_selected (subtree_up(st)));
+    || !producable (l, tree_label (subtree_up(st)));
 }
 //----------------------
 // subtree1

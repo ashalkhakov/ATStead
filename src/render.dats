@@ -33,7 +33,7 @@ render_label (lab) =
     | Lapp () => "app"
 
 implement
-create (id, lab) = let
+create (id, lab, focussed) = let
   (*
     depends on fixity:
     - assl
@@ -45,11 +45,13 @@ create (id, lab) = let
       - infix? 
   *)
   val txt = render_label lab
+  val cls = "spaced"
+  val cls = if focussed then cls + " focussed" else cls
   val d =
     attrib_mac(
       append_mac(element("span"), text(txt)),
       "id", id2string(id),
-      "class", "spaced"
+      "class", cls
     ) (* end of [val] *)
   // add a handler too
   val () = dom_add_listener (
@@ -70,14 +72,16 @@ end
 // render the tree starting at the given subtree
 implement
 render (pid, node) = let
-  val id = selected_ident (node)
-  val dom_id = ident2ID id
-  val lab = selected_label node
-  val dm = create (dom_id, lab)
-  val () = dom_insert_at (pid, dm)
-  val () = selected_children_foreach (
-    node
-  , lam chld =<cloref1> render (dom_id, chld)
-  ) (* end of [val] *)
+  fun
+  aux (node: !subtree, fid: ident):<cloref1> void = let
+    val id = selected_ident (node)
+    val focussed = (id = fid)
+    val dom_id = ident2ID id
+    val lab = selected_label node
+    val dm = create (dom_id, lab, focussed)
+    val () = dom_insert_at (pid, dm)
+  in
+  end
+  val () = subtree_foreach (node, aux)
 in
 end
