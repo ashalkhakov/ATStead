@@ -70,7 +70,7 @@ embed : (tree, layer) -> tree = "mac#" // TODO: implement
 fun
 selected_label : (!subtree) -> label = "mac#tree_label"
 fun
-subtree_foreach : (!subtree, (!subtree, ident) -<cloref1> void) -> void = "mac#subtree_foreach"
+subtree_foreach : (!subtree, (!subtree, ident(*focus*), Option_vt(ident)(*parent*)) -<cloref1> void) -> void = "mac#subtree_foreach"
 fun
 selected_children_foreach : (!subtree, (!subtree) -<cloref1> void) -> void = "mac#tree_children_foreach"
 fun
@@ -185,3 +185,47 @@ val
 irreducible : (label, !subtree) -> bool = "mac#"
 val
 producable : (label, label) -> bool = "mac#"
+
+(* ****** ****** *)
+
+absvtype subtree1
+
+fun
+unflatten (subtree): subtree1 = "mac#subtree1_unflatten"
+fun
+flatten (subtree1): subtree = "mac#subtree1_flatten"
+
+fun
+open (subtree1): subtree1 = "mac#subtree1_open"
+fun
+close (subtree1): subtree1 = "mac#subtree1_close"
+
+fun
+lift (subtree1, subtree -<cloref1> subtree)
+  : subtree1 = "mac#subtree1_lift"
+
+fun
+enter1 (label, subtree1): subtree1 = "mac#subtree1_enter"
+fun
+entry1 (label, subtree1): subtree1 = "mac#subtree1_entry"
+fun
+left1 (subtree1): subtree1 = "mac#subtree1_left"
+fun
+first_child1 (subtree1): subtree1 = "mac#subtree1_first_child"
+fun
+right1 (subtree1): subtree1 = "mac#subtree1_right"
+fun
+last_child1 (subtree1): subtree1 = "mac#subtree1_last_child"
+fun
+up1 (subtree1): subtree1 = "mac#subtree1_up"
+fun
+down1 (subtree1): subtree1 = "mac#subtree1_down"
+fun
+back_to_top1 (subtree1): subtree1 = "mac#subtree1_back_to_top"
+fun
+insert1 (label, subtree1): subtree1 = "mac#subtree1_insert"
+fun
+replace1 (tree, subtree1): subtree1 = "mac#subtree1_replace"
+
+fun
+subtree1_foreach : (!subtree1, (!subtree, ident(*focus*), Option_vt(ident)(*parent*)) -<cloref1> void) -> void = "mac#subtree1_foreach"

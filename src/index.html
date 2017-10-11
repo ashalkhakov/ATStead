@@ -8,12 +8,16 @@
 <script
    src="https://ats-lang.github.io/LIBRARY/libatscc2js/ATS2-0.3.2/libatscc2js_print_store_cats.js"></script>
 <style>
-  .spaced { padding: 10px }
+  #container { margin: 0 auto }
+  span.spaced { padding: 10px }
   .focussed { background-color: blue; color: white }
+  div.content { display:relative; }
+  div.spaced > div.spaced { display:block;margin-left:32px; }
 </style>
 </head>
 <body>
-<h1>Hello from ATStead!</h1>
+  <h1>Hello from ATStead!</h1>
+  <button id="btn-run-tests">Run tests</button>
 <div id="container">
 </div>
 <div id="help">
@@ -23,10 +27,18 @@
     <li><strong>arrows</strong>: navigate (down: move to the first child)</li>
     <li><strong>i</strong>: insert "if" at focus point</li>
     <li><strong>h</strong>: replace focus point with a hole</li>
-    <li><strong>v</strong>: insert "var" at focs point</li>
+    <li><strong>v</strong>: insert "var" at focus point</li>
     <li><strong>0-2</strong>: insert a digit constant at focus point</li>
     <li><strong>l</strong>: insert a "lam" at focus point</li>
     <li><strong>space</strong>: insert an "app" at focus point</li>
+    <li><strong>9-0</strong>: insert left-right parenthesis</li>
+  </ul>
+  <h2>Things to try</h2>
+  <ul>
+    <li><strong>v p v</strong>: var+var</li>
+    <li><strong>v m v p v m v</strong>: var*var+var*var</li>
+    <li><strong>i v v v p v</strong>: (if var then var else var) + var</li>
+    <li><strong>l v v p v m v</strong>: lam var . var + var * var</li>
   </ul>
 </div>
 <div id="sdom-test"></div>

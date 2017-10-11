@@ -45,11 +45,17 @@ create (id, lab, focussed) = let
       - infix? 
   *)
   val txt = render_label lab
+  val content = append_mac(element("div"), text(txt))
+  val content_cls = "content"
+  val content_cls = if focussed then content_cls + " focussed" else content_cls
+  val content = attrib_mac (content, "class", content_cls)
+  
+  //val children = attrib_mac(element("div"), "id", id2string(id)+"-children", "class", "children")
+  
   val cls = "spaced"
-  val cls = if focussed then cls + " focussed" else cls
   val d =
     attrib_mac(
-      append_mac(element("span"), text(txt)),
+      append_mac(element("div"), content),
       "id", id2string(id),
       "class", cls
     ) (* end of [val] *)
@@ -71,17 +77,24 @@ end
 
 // render the tree starting at the given subtree
 implement
-render (pid, node) = let
+render (the_pid, node) = let
   fun
-  aux (node: !subtree, fid: ident):<cloref1> void = let
+  aux (node: !subtree, fid: ident, pid: Option_vt(ident)):<cloref1> void = let
     val id = selected_ident (node)
     val focussed = (id = fid)
     val dom_id = ident2ID id
     val lab = selected_label node
     val dm = create (dom_id, lab, focussed)
-    val () = dom_insert_at (pid, dm)
+    
+    val which_pid =
+      case+ pid of
+      | ~Some_vt p => ident2ID p
+      | ~None_vt() => the_pid
+    // end of [val]
+
+    val () = dom_insert_at (which_pid, dm)
   in
   end
-  val () = subtree_foreach (node, aux)
+  val () = subtree1_foreach (node, aux)
 in
 end

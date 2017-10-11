@@ -8,4 +8,4 @@ fun
 create (ID, label, bool(*focussed*)): dom1 = "mac#"
 
 fun
-render (put_into : ID, node : !subtree): void = "mac#"
+render (put_into : ID, node : !subtree1): void = "mac#"

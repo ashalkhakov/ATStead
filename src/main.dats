@@ -64,169 +64,6 @@ extern
 castfn ID2ident : ID -> ident
 
 (* ****** ****** *)
-(*
-absvtype subtree' = ptr
-(*
-extern
-val
-unflatten : subtree -> subtree' = "mac#subtree1_unflatten"
-extern
-val
-flatten : subtree' -> subtree = "mac#subtree1_flatten"
-extern
-fun{}
-lift$fopr : subtree -> subtree
-extern
-fun{}
-lift : subtree' -> subtree'
-
-
-implement
-unflatten '(ps, t) = '(list_sing(ps), t)
-
-implement
-flatten '(ps,t) = '(list_concat ps, t)
-
-implement{}
-lift st =
-let
-    val '(ps, t) = st
-    val- list_cons (p, ps') = ps
-    val '(q, s) = lift$fopr<> '(p, t)
-in
-    '(list_cons (q, ps'), s)
-end
-
-extern
-val
-enter' : (label, subtree') -> subtree'
-extern
-val
-entry' : (label, subtree') -> subtree'
-extern
-val
-left' : subtree' -> subtree'
-extern
-val
-first_child' : subtree' -> subtree'
-extern
-val
-right' : subtree' -> subtree'
-extern
-val
-last_child' : subtree' -> subtree'
-extern
-val
-up' : subtree' -> subtree'
-extern
-val
-down' : subtree' -> subtree'
-extern
-val
-back_to_top' : subtree' -> subtree'
-extern
-val
-insert' : (label, subtree') -> subtree'
-extern
-val
-replace' : (tree, subtree') -> subtree'
-extern
-val
-open : subtree' -> subtree'
-extern
-val
-close : subtree' -> subtree'
-
-implement
-entry' (l, st) = lift<> (st) where {
-    implement
-    lift$fopr<> st = entry (l, st)
-}
-implement
-left' st = let
-    implement
-    lift$fopr<> st = left st
-in
-    lift<> st
-end
-implement
-first_child' st = let
-    implement
-    lift$fopr<> st = first_child st
-in
-    lift<> st
-end
-implement
-right' st = let
-    implement
-    lift$fopr<> st = right st
-in
-    lift<> st
-end
-implement
-last_child' st = let
-    implement
-    lift$fopr<> st = last_child st
-in
-    lift<> st
-end
-implement
-up' st = let
-    implement
-    lift$fopr<> st = up st
-in
-    lift<> st
-end
-implement
-down' st = let
-    implement
-    lift$fopr<> st = down st
-in
-    lift<> st
-end
-implement
-back_to_top' st = let
-    implement
-    lift$fopr<> st = back_to_top st
-in
-    lift<> st
-end
-implement
-insert' (l, st) = let
-    implement
-    lift$fopr<> st = insert (l, st)
-in
-    lift<> st
-end
-implement
-replace' (l, st) = let
-    implement
-    lift$fopr<> st = replace (l, st)
-in
-    lift<> st
-end
-
-implement
-open st =
-let
-    val+ '(p, t) = st
-    prval () = lemma_list_param p
-in
-    '(list_cons(list_nil(), p), t)
-end
-implement
-close st =
-let
-    val+ '(p, t) = st
-    val- list_cons (p, ps) = p
-    val s = host '(p, t)
-in
-    right' '(ps, s)
-end
-*)
-*)
-
-(* ****** ****** *)
 //
 extern
 fun
@@ -235,6 +72,8 @@ implement
 hello() = let
   #define :: list_vt_cons
   #define nil list_vt_nil
+  
+  fun tests(): void = {
 
   // construction test
   val () = {
@@ -245,10 +84,19 @@ hello() = let
     val x = tree_fork(Lvar "a", c :: z :: b :: nil)
 
     // FIXME: how to send ATS closures to JS code?
-    val () = children_foreach (x, lam x =<cloref1> println!(label(x)))
-    val () = preorder_foreach (x, lam x => println!(x))
+    val () = println!("children foreach, starting at root")
+    val () = children_foreach (x, lam x =<cloref1> println!(label(x))) // c, z, b
+    val () = println!("preorder foreach, starting at root")
+    val () = preorder_foreach (x, lam x => println!(x)) // a, c, z, b    
    
     val () = tree_delete x
+  }
+  // preorder test
+  val () = {
+    val () = println!("preorder test:")
+    val c = tree_fork(Lvar"a", tree_fork(Lvar"b", tree_atom(Lvar"c") :: nil) :: tree_fork(Lvar"d", tree_atom(Lvar"e") :: nil) :: nil)
+    val () = preorder_foreach (c, lam x => println!(x)) // a, b, c, d, e
+    val () = tree_delete c
   }
 
   // navigation test
@@ -332,39 +180,82 @@ hello() = let
   }
 
   // treeinsert
+  // insert at hole
+  val () = println!("insert at hole")
   val () = {
-    // insert at hole
-    val () = println!("insert at hole")
-    val () = {
-      val x = hole()
+    val x = hole()
      
-      val st = root(x)
-      val y = tree_atom(Lvar "A")
-      val st = treeinsert (y, st)
+    val st = root(x)
+    val y = tree_atom(Lvar "A")
+    val st = treeinsert (y, st)
 
-      val x = host(st)
-      // A:
-      val () = preorder_foreach (x, lam x => println!(x))
+    val x = host(st)
+    // A:
+    val () = preorder_foreach (x, lam x => println!(x))
      
-      val () = tree_delete(x)
-    }
-    // insert at non-hole
-    val () = println!("insert at non-hole")
-    val ()  = {
-      val x = tree_fork(Lvar "plus", hole() :: hole() :: nil())
-     
-      val st = root(x)
-      val y = tree_atom(Lvar "A")
-      val st = treeinsert(y, st)
-     
-      val x = host(st)
-      // add, A, hole:
-      val () = preorder_foreach(x, lam x => println!(x))
-     
-      val () = tree_delete(x)
-    }
+    val () = tree_delete(x)
   }
 
+  // insert at non-hole
+  val () = println!("insert at non-hole")
+  val ()  = {
+    val x = tree_fork(Lvar "plus", hole() :: hole() :: nil())
+     
+    val st = root(x)
+    val y = tree_atom(Lvar "A")
+    val st = treeinsert(y, st)
+     
+    val x = host(st)
+    // add, A, hole:
+    val () = preorder_foreach(x, lam x => println!(x))
+     
+    val () = tree_delete(x)
+  }
+
+  // entry with precedence test 1
+  val () = {
+    val () = println!("simple entry test 1")
+    
+    val x = hole()
+    val st = root(x)
+    val st = entry (Lvar"a", st)
+    val st = entry (Ladd(), st)
+    //val st = entry (Lvar"b", st)
+    
+    val x = host(st)
+    // result should be the correct tree: mul(var"a",hole()(*var"b"*))
+    val () = preorder_foreach(x, lam x => println!(x))
+    val () = tree_delete(x)
+  }
+  // entry with precedence test 2
+  val () = {
+    val () = println!("simple entry test 2")
+
+    // start with empty tree
+    val x = hole()     
+    val st = root(x)
+    // enter var"a", mul(), var"b", add(),var"c",mul(),var"d"
+    val st = entry (Lvar"a", st)
+    val st = entry (Lmul(), st)
+    val st = entry (Lvar"b", st)
+    val st = entry (Ladd(), st)
+    val st = entry (Lvar "c", st)
+    val st = entry (Lmul(), st)
+    val st = entry (Lvar "d", st)
+
+    val x = host(st)
+    // result should be the correct tree: add(mul(var"a",var"b"),mul(var"c",var"d"))
+    val () = preorder_foreach(x, lam x => println!(x))
+    val () = tree_delete(x)
+  }
+
+  } (* end of [tests] *)
+
+  val () = tests ()
+  val (pf_d | d) = dom_get_by_id (string2id"btn-run-tests")
+  val-true = dom_is_some (d)
+  val () = dom_add_listener (d, "click", lam (d, e) => tests (), false)
+  val () = dom_putback (pf_d | d)
   // result: c, z, b
   (*
   {
@@ -457,43 +348,49 @@ command =
   | CMDreplace of tree // replace focussed subtree with the new tree
   | CMDinsert of label // insert a new label
   | CMDenter of label // enter a new label, taking precedence into account
+  | CMDopen of () // opening paren
+  | CMDclose of () // closing paren
   | CMDnop // no action!
 //
 extern
 fun
-present (subtree, command): subtree
+present (subtree1, command): subtree1
 //
 implement
 present (focussed, cmd) =
 (
 case+ cmd of
 | ~CMDentry t => let
-    val ot = host focussed
+    val ot = flatten focussed
+    val ot = host ot
     val () = tree_delete (ot)
     val r = root t
+    val r = unflatten r
   in
     r
   end
 | ~CMDnav nt => let
   in
     case+ nt of
-    | NTleft () => left focussed
-    | NTright () => right focussed
-    | NTup () => up focussed
-    | NTdown () => down focussed
-    | NTfirst () => first_child focussed
-    | NTlast () => last_child focussed
-    | NTtop () => back_to_top focussed
+    | NTleft () => left1 focussed
+    | NTright () => right1 focussed
+    | NTup () => up1 focussed
+    | NTdown () => down1 focussed
+    | NTfirst () => first_child1 focussed
+    | NTlast () => last_child1 focussed
+    | NTtop () => back_to_top1 focussed
   end
-| ~CMDreplace t => replace (t, focussed)
-| ~CMDinsert lab => insert (lab, focussed)
-| ~CMDenter lab =>  entry (lab, focussed)
+| ~CMDreplace t => replace1 (t, focussed)
+| ~CMDinsert lab => insert1 (lab, focussed)
+| ~CMDenter lab =>  entry1 (lab, focussed)
+| ~CMDopen () => open (focussed)
+| ~CMDclose () => close (focussed)
 | ~CMDnop () => focussed
 )
 //
 extern
 fun
-input_events (subtree, (subtree, string) -> subtree): void = "mac#"
+input_events (subtree1, (subtree1, string) -> subtree1): void = "mac#"
 //
 extern
 fun
@@ -508,28 +405,33 @@ hello_sdom_tree (): void = let
   string2ID : string -> ID  
 
   // construct stuff!
-  val x = tree_fork(Lvar "plus", hole() :: hole() :: nil())     
-  val st = root(x)
-  val y = tree_atom(Lvar "A")
-  val st = treeinsert(y, st)
-  val x = host(st)
+  val x = hole ()
   
   fun
-  action (s: subtree, evt: string): subtree = let
+  action (s: subtree1, evt: string): subtree1 = let
     // turn the input event into a command for the subtree
+    (*
+     * need some kind of parsing here... this gets tedious fast.
+     * e.g. entering [a-zA-Z][a-zA-Z0-9]* --> variable, save its name
+     * entering ctrl-p, ctrl-n or arrow up, arrow down --> navigate
+     * or even, if it's a non-shortcut, let some code decide what was entered, by lexing it!
+    *)
     val cmd = (
       ifcase
       | evt = "ArrowLeft" => CMDnav (NTleft())
       | evt = "ArrowRight" => CMDnav (NTright())
       | evt = "ArrowUp" => CMDnav (NTup())
       | evt = "ArrowDown" => CMDnav (NTdown())
-      | evt = "Plus" => CMDenter (Ladd ())
+      | evt = "KeyP" => CMDenter (Ladd ())
+      | evt = "KeyM" => CMDenter (Lmul ())
       | evt = "KeyI" => CMDenter (Lif ())
       | evt = "KeyV" => CMDenter (Lvar "MYVAR")
       | evt = "KeyH" => CMDreplace (hole ())
-      | evt = "Digit0" => CMDenter (Lconst 0)
       | evt = "Digit1" => CMDenter (Lconst 1)
       | evt = "Digit2" => CMDenter (Lconst 2)
+      | evt = "Digit3" => CMDenter (Lconst 3)
+      | evt = "Digit9" => CMDopen ()
+      | evt = "Digit0" => CMDclose ()
       | evt = "KeyL" => CMDenter (Llam ())
       | evt = "Space" => CMDenter (Lapp ())
       | _ => CMDnop ()
@@ -547,7 +449,8 @@ hello_sdom_tree (): void = let
   end
   
   // run the stream!
-  val rt = root x
+  val rt = root(x)
+  val rt = unflatten(rt)
   val () = input_events (rt, action)
 in
 end

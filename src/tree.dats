@@ -78,6 +78,7 @@ end
 implement
 entry (l, st) =
 let
+    val () = println!("entry with label: ", l)
     val st = reduce (l, st)
 in
     enter (l, st)
@@ -85,8 +86,9 @@ end
 
 implement
 reduce (l, st) =
-    if irreducible (l, st) then st
+    if irreducible (l, st) then (println!("irreducible");st)
     else let
+        val () = println!("moving up, retrying")
         val st = up st
     in
         reduce (l, st)
@@ -102,6 +104,35 @@ irreducible (l, st) =
 implement
 producable (op2, op1) =
   (op1 = op2 && assl op1) || prec op1 > prec op2
+  
+(* ****** ****** *)
+
+implement
+enter1 (l, st) = lift (st, lam st =<cloref1> enter (l, st))
+implement
+entry1 (l, st) = lift (st, lam st =<cloref1> entry (l, st))
+implement
+left1 (st) = lift (st, lam st =<cloref1> left st)
+implement
+first_child1 (st) = lift (st, lam st =<cloref1> first_child st)
+implement
+right1 (st) = lift (st, lam st =<cloref1> right st)
+implement
+last_child1 (st) = lift (st, lam st =<cloref1> last_child st)
+implement
+up1 (st) = lift (st, lam st =<cloref1> up st)
+implement
+down1 (st) = lift (st, lam st =<cloref1> down st)
+implement
+back_to_top1 (st) = lift (st, lam st =<cloref1> back_to_top st)
+implement
+insert1 (l, st) = lift (st, lam st =<cloref1> insert (l, st))
+(*
+implement
+replace1 (t, st) = lift (st, lam st =<cloref1> replace (t, st))
+*)
+
+(* ****** ****** *)
 
 %{$
 //
@@ -178,19 +209,21 @@ function
 tree_preorder_foreach(x, f) {
   if (x === null)
     return;
-  var stack = [];
 
-  stack.push(x);
-  while (stack.length > 0) {
-    var cur = stack.shift();
-    f(cur.value);
-    var c = cur.child;
-    // visit children, if any
-    // NOTE: we don't actually mandate that c.child.prev === null!
-    // but in a good tree, it will be!
-    while (c !== null) {
-      stack.push(c);
-      c = c.next;
+  var r = x;
+  
+  var node = r
+  while (true) {
+    f(node.value);
+    if (node.child !== null) {
+       node = node.child // walk down
+    } else {
+       while (node.next === null) {
+         if (node === r)
+           return;
+         node = node.parent; // walk up
+       }
+       node = node.next; // ... and right
     }
   }
 }
@@ -233,7 +266,15 @@ subtree_foreach(x, f) {
   
   var node = r
   while (true) {
-    f[0](f, node, xid);
+    var pid;
+    if (node.parent === null) {
+      pid = null;
+    } else {
+      var parent_id = tree_ident(node.parent);
+      pid = [parent_id];
+    }
+
+    f[0](f, node, xid, pid);
     if (node.child !== null) {
        node = node.child // walk down
     } else {
@@ -380,6 +421,8 @@ subtree_treeinsert(t, st) {
   if (subtree_at_hole(st)) {
     return subtree_replace(t, st);
   } else {
+    // the current focus is replaced with [t]
+    var sel = st;
     var p = st.parent;
     if (p !== null) {
       if (p.child == st) {
@@ -387,19 +430,23 @@ subtree_treeinsert(t, st) {
       }
     }
     t.parent = p;
+    st.parent = null;
 
     if (st.prev !== null) {
       st.prev.next = t;
     }
     t.prev = st.prev;
+    st.prev = null;
 
     if (st.next !== null) {
       st.next.prev = t;
     }
     t.next = st.next;
+    st.next = null;
 
-    var sel = t;
-    st = subtree_down(st);
+    // navigate down the new subtree
+    st = subtree_down(t);
+    // and put the extracted tree back
     st = subtree_replace(sel, st);
 
     return st;
@@ -419,15 +466,58 @@ subtree_promote(st) {
 //----------------------
 function
 irreducible(l, st) {
-    return subtree_at_hole(st)
+    var res = subtree_at_hole(st)
     || subtree_topmost(st)
     || !subtree_rightmost(st)
     || !producable (l, tree_label (subtree_up(st)));
+    return res;
 }
 //----------------------
 // subtree1
 
-// TODO
+function
+subtree1_unflatten(s) {
+  return [s];
+}
+function
+subtree1_flatten(st) {
+  return st[st.length-1];
+}
+function
+subtree1_lift(st,f) {
+  var p = st[0];
+  var p1 = f[0](f, p);
+  st[0] = p1;
+  return st;
+}
+function
+subtree1_replace(t, st) {
+  var clo = [function(cenv,st) {
+    return subtree_replace(cenv[1], st);
+  }, t];
+  return subtree1_lift(st, clo);
+}
+function
+subtree1_open(st) {
+  var current = st[st.length-1];
+  st.push(current);
+  return st;
+}
+function
+subtree1_close(st) {
+  // pop the most-recent subtree
+  if (st.length > 1) {
+    st.pop();
+    return subtree1_right (st);
+  } else {
+    return st;
+  }
+}
+function
+subtree1_foreach(st, f) {
+  var focus = st[st.length-1]; // assert non-empty!
+  subtree_foreach(focus, f);
+}
 
 %} // end of [%{$]
 
