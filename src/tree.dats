@@ -260,7 +260,7 @@ subtree_root(x) {
   return x;
 }
 function
-subtree_foreach(x, f) {
+subtree_foreach_parent(x, epid, f) {
   var xid = tree_ident(x);
   var r = subtree_back_to_top(x);
   
@@ -268,7 +268,11 @@ subtree_foreach(x, f) {
   while (true) {
     var pid;
     if (node.parent === null) {
-      pid = null;
+      if (epid === null) {
+        pid = null;
+      } else {
+        pid = epid;
+      }
     } else {
       var parent_id = tree_ident(node.parent);
       pid = [parent_id];
@@ -286,6 +290,10 @@ subtree_foreach(x, f) {
        node = node.next; // ... and right
     }
   }
+}
+function
+subtree_foreach(x, f) {
+  subtree_foreach_parent(x, null, f);
 }
 
 // - top/topmost(parent=null)
@@ -392,6 +400,29 @@ subtree_replace(tree, st) {
   return tree;
 }
 function
+subtree_swap(tree, st) {
+  tree.parent = st.parent;
+  tree.next = st.next;
+  tree.prev = st.prev;
+
+  if (st.next !== null) {
+    st.next.prev = tree;
+  }
+  if (st.prev !== null) {
+    st.prev.next = tree;
+  }
+  var p = st.parent;
+  if (p !== null) {
+    if (p.child === st) {
+      p.child = tree;
+    }
+  }
+  st.next = null;
+  st.prev = null;
+  st.parent = null;
+  return tree;
+}
+function
 subtree_unlink(st) {
   var p = st.parent;
   //if (p !== null) // assume non-null
@@ -475,19 +506,51 @@ irreducible(l, st) {
 //----------------------
 // subtree1
 
+/*
+what's the new approach?
+- state: stack of trees (stack of holes, even)
+  - conceptually, extends from the left rightwards
+  - every element E has some element on its "left", say P (except the root)
+    - precondition: P is a hole!
+    - then P is the parent of parenthesized subtree E
+- last element of stack: just the current focussed subtree :)
+  - other elements (the path): these are all HOLES!
+- open paren:
+  - if current head is a hole, do nothing
+    but if it's not, then make a fresh hole H and swap it with current head
+  - push to the end of stack (? like, just put it after current head, makes it into a queue???)
+- close paren:
+  - if there is only one element on stack, ignore
+  - otherwise, pop the node N off the stack, and replace the hole (previous element of stack)
+    with N (destroying the hole in the process)
+- rendering
+  - get the first element of stack, the root
+  - render the nodes recursively
+    - check the stack, if you have a node to look for... then wait for it
+      - if current node id's same as the node we are looking for, begin rendering the subtree!
+    - otherwise, you have no nodes to look for, just render stuff
+*/
 function
 subtree1_unflatten(s) {
-  return [s];
+  var h = tree_hole ();
+  return {stk: [h], sel: s};
 }
 function
 subtree1_flatten(st) {
-  return st[st.length-1];
+  var focus = st.sel;
+  var stk = st.stk;
+  while (stk.length > 0) {
+    var p = stk.pop();
+    focus = subtree_back_to_top(focus);
+    focus = subtree_replace(p, focus);
+  }
+  return focus;
 }
 function
 subtree1_lift(st,f) {
-  var p = st[0];
-  var p1 = f[0](f, p);
-  st[0] = p1;
+  var sel = st.sel;
+  sel = f[0](f, sel);
+  st.sel = sel;
   return st;
 }
 function
@@ -499,15 +562,24 @@ subtree1_replace(t, st) {
 }
 function
 subtree1_open(st) {
-  var current = st[st.length-1];
-  st.push(current);
+  var sel = st.sel;
+
+  var h = tree_hole ();
+  st.stk.push(sel);
+  st.sel = h;
+
   return st;
 }
 function
 subtree1_close(st) {
-  // pop the most-recent subtree
-  if (st.length > 1) {
-    st.pop();
+  // pop the most-recent subtree and incorporate it back into its parent
+  var stk = st.stk;
+  var sel = st.sel;  
+  if (stk.length > 1) {
+    var n = stk.pop();
+    sel = subtree_back_to_top(sel);
+    n = subtree_replace(sel, n);
+    st.sel = n;
     return subtree1_right (st);
   } else {
     return st;
@@ -515,8 +587,19 @@ subtree1_close(st) {
 }
 function
 subtree1_foreach(st, f) {
-  var focus = st[st.length-1]; // assert non-empty!
-  subtree_foreach(focus, f);
+  var stk = st.stk;
+  var i = 0;
+  while (i < stk.length) {
+    var n = stk[i];
+    var np = i>0? stk[i-1] : null;
+    var n_id = np? [tree_ident(np)] : null;
+    subtree_foreach_parent(n, n_id, f);
+    i++;
+  }
+  var last = stk[stk.length-1];
+  var n_id = tree_ident(last);
+  n_id = [n_id];
+  subtree_foreach_parent(st.sel, n_id, f);
 }
 
 %} // end of [%{$]
