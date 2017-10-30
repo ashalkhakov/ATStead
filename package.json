@@ -1,0 +1,24 @@
+{
+  "name": "atstead",
+  "version": "0.0.1",
+  "description": "ATStead is a browser-based structured editor",
+  "main": "index.html",
+  "scripts": {
+    "test": "nodejs tests/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ashalkhakov/ATStead.git"
+  },
+  "keywords": [
+    "ATS",
+    "structure",
+    "editor"
+  ],
+  "author": "Artyom Shalkhakov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ashalkhakov/ATStead/issues"
+  },
+  "homepage": "https://github.com/ashalkhakov/ATStead#readme"
+}

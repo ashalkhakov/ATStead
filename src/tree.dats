@@ -78,7 +78,6 @@ end
 implement
 entry (l, st) =
 let
-    val () = println!("entry with label: ", l)
     val st = reduce (l, st)
 in
     enter (l, st)
@@ -86,9 +85,8 @@ end
 
 implement
 reduce (l, st) =
-    if irreducible (l, st) then (println!("irreducible");st)
+    if irreducible (l, st) then st
     else let
-        val () = println!("moving up, retrying")
         val st = up st
     in
         reduce (l, st)
@@ -204,7 +202,43 @@ tree_delete(x) {
   // so that means we don't have to do anything here
   delete the_tree_allocs[x.ident];
 }
+function
+tree_map(x, f, g) {
+  if (x === null)
+    return;
 
+  var r = x;
+  var stk = [];
+  var node = r
+  while (true) {
+    var n = f[0](f, node.value);
+    console.log(node);
+
+    stk.push(n);
+    if (node.child !== null) {
+      node = node.child // walk down
+    } else {
+       while (node.next === null) {
+         if (node === r) {
+           var res = stk.pop();
+           return res;
+         }
+         
+         var xn = stk.pop();
+         var i = stk.length-1;
+         stk[i] = g[0](g, stk[i], xn);
+         
+         node = node.parent; // walk up
+       }
+
+       var xn = stk.pop();
+       var i = stk.length-1;
+       stk[i] = g[0](g, stk[i], xn);
+
+       node = node.next; // ... and right
+    }
+  }
+}
 function
 tree_preorder_foreach(x, f) {
   if (x === null)
@@ -214,7 +248,7 @@ tree_preorder_foreach(x, f) {
   
   var node = r
   while (true) {
-    f(node.value);
+    f[0](f, node.value);
     if (node.child !== null) {
        node = node.child // walk down
     } else {

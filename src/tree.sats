@@ -53,7 +53,9 @@ template : label -> tree = "mac#"
 fun
 children_foreach : (!tree, (!tree) -<cloref1> void) -> void = "mac#tree_children_foreach"
 fun
-preorder_foreach : (!tree, label -> void) -> void = "mac#tree_preorder_foreach"
+preorder_foreach : (!tree, label -<cloref1> void) -> void = "mac#tree_preorder_foreach"
+fun
+tree_map : {a:t@ype} (!tree, (label) -<cloref1> a, (a, a) -<cloref1> a) -> a = "mac#tree_map"
 fun
 atomic : (!tree) -> bool = "mac#"
 fun
